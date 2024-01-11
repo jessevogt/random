@@ -94,7 +94,7 @@
             title = m.groups.tail + hash.match(/(#L\d+)/)?.at(1) || "";
           }
         } else if (host == "docs.google.com") {
-          title = byC("docs-title-input").value;
+          title = byCN("docs-title-input").value;
         }
 
         const el = doc.createElement("a");
@@ -146,7 +146,7 @@
             title = m.groups.tail + hash.match(/(#L\d+)/)?.at(1) || "";
           }
         } else if (host == "docs.google.com") {
-          title = byC("docs-title-input").value;
+          title = byCN("docs-title-input").value;
         }
 
         const el = doc.createElement("textarea");
