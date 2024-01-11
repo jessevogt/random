@@ -117,12 +117,12 @@
       
     assertEqual(
       "github pull request or issue title",
-      locationToMarkdown({ host: "github.com", path: "/jessevogt/foobar/pull/123" })
+      locationToAhref({ host: "github.com", path: "/jessevogt/foobar/pull/123" })
     )
 
     assertEqual(
       "some/file#L42",
-      locationToMarkdown({ host: "github.com", path: "/jessevogt/foobar/blob/some/file", hash: "#L42" })
+      locationToAhref({ host: "github.com", path: "/jessevogt/foobar/blob/some/file", hash: "#L42" })
     )
   </script>
 
