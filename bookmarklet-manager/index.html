@@ -150,7 +150,7 @@
         }
 
         const el = doc.createElement("textarea");
-        el.value = `[${title}](${loc})`
+        el.value = `[${title}](${loc})`;
         doc.body.appendChild(el);
         el.select();
         doc.execCommand("copy");
