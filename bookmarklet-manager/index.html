@@ -75,6 +75,58 @@
   </script>
 
   <script class="bookmarklet" id="locationToAhref">
+    const locationToAhref =
+      ({ path = null, hash = null, title = null, host = null } = {}) => {
+        var win = window,
+          doc = document,
+          loc = win.location,
+          host = host || loc.host,
+          path = path || loc.pathname,
+          title = title || doc.title,
+          byCN = (c) => doc.getElementsByClassName(c)[0],
+          hash = hash || loc.hash,
+          ghPath = (type) => new RegExp(`^/(?<org>[^/]+)/(?<repo>[^/]+)/${type}/(?<tail>.+)`);
+
+        if (host == "github.com") {
+          if (path.match(ghPath("pull")) || path.match(ghPath("issue"))) {
+            title = byCN("gh-header-title").innerText;
+          } else if (m = path.match(ghPath("blob"))) {
+            title = m.groups.tail + hash.match(/(#L\d+)/)?.at(1) || "";
+          }
+        } else if (host == "docs.google.com") {
+          title = byC("docs-title-input").value;
+        }
+
+        const el = doc.createElement("a");
+        el.href = loc;
+        el.innerText = title;
+        doc.body.appendChild(el);
+
+        const rng = doc.createRange();
+        rng.selectNodeContents(el);
+
+        const sel = win.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(rng);
+        doc.execCommand("copy");
+        el.remove(); 
+
+        return title;
+      }
+      // BOOKMARKLET_END
+      
+    assertEqual(
+      "github pull request or issue title",
+      locationToMarkdown({ host: "github.com", path: "/jessevogt/foobar/pull/123" })
+    )
+
+    assertEqual(
+      "some/file#L42",
+      locationToMarkdown({ host: "github.com", path: "/jessevogt/foobar/blob/some/file", hash: "#L42" })
+    )
+  </script>
+
+  <script class="bookmarklet" id="locationToMarkdown">
     const locationToMarkdown =
       ({ path = null, hash = null, title = null, host = null } = {}) => {
         var win = window,
@@ -93,21 +145,16 @@
           } else if (m = path.match(ghPath("blob"))) {
             title = m.groups.tail + hash.match(/(#L\d+)/)?.at(1) || "";
           }
+        } else if (host == "docs.google.com") {
+          title = byC("docs-title-input").value;
         }
 
-        const el = doc.createElement("a");
-        el.href = loc;
-        el.innerText = title;
+        const el = doc.createElement("textarea");
+        el.value = `[${title}](${loc})`
         doc.body.appendChild(el);
-
-        const rng = doc.createRange();
-        rng.selectNodeContents(el);
-
-        const sel = win.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(rng);
+        el.select();
         doc.execCommand("copy");
-        el.remove(); 
+        el.remove();
 
         return title;
       }
