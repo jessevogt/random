@@ -1,0 +1,142 @@
+<html>
+<head>
+<style>
+  .test { display: none; }
+
+  pre {
+    white-space: pre-wrap;       /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+</style>
+</head>
+<body>
+  <div class="gh-header-title test">github pull request or issue title</div>
+  <script>
+    const SENTINAL = "// BOOKMARKLET_END";
+
+    function assertEqual(expected, actual) {
+      if (expected == actual) {
+        console.log("%cPASS", "color: green");
+      } else {
+        console.log(`%cFAIL ${expected} != ${actual}`, "color: red")
+      }
+    }
+
+    function minify(str) {
+      let res = "";
+      let quote = 0;
+      let thisChar = null;
+      let lastAddedChar = null;
+      for (let i = 0; i < str.length; ++i) {
+        thisChar = str[i];
+        if (
+          quote % 2 == 0 &&
+          (thisChar == " " || thisChar == "\n") &&
+          (lastAddedChar == null || !lastAddedChar.match(/[A-Za-z]/))
+        ) {
+          // pass 
+        } else {
+          if (lastAddedChar == " " && !thisChar.match(/[A-Za-z]/)) {
+            res = res.slice(0, -1);
+          }
+
+          if (str.slice(i).startsWith(SENTINAL)) {
+            return res;
+          }
+
+          res += thisChar;
+          lastAddedChar = thisChar;
+        }
+
+        if (thisChar == '"' || thisChar == "'") {
+          quote += 1;
+        }
+      }
+      
+      return res;
+    }
+  </script>
+
+
+  <script class="bookmarklet" id="helloWorld">
+    () => { alert("hello world"); return "foobar"; } // BOOKMARKLET_END
+  </script>
+
+  <script class="bookmarklet" id="locationToMarkdown">
+    const locationToMarkdown =
+      ({ path = null, hash = null, title = null, host = null } = {}) => {
+        var win = window,
+          doc = document,
+          loc = win.location,
+          host = host || loc.host,
+          path = path || loc.pathname,
+          title = title || doc.title,
+          byCN = (c) => doc.getElementsByClassName(c)[0],
+          hash = hash || loc.hash,
+          ghPath = (type) => new RegExp(`^/(?<org>[^/]+)/(?<repo>[^/]+)/${type}/(?<tail>.+)`);
+
+        if (host == "github.com") {
+          if (path.match(ghPath("pull")) || path.match(ghPath("issue"))) {
+            title = byCN("gh-header-title").innerText;
+          } else if (m = path.match(ghPath("blob"))) {
+            title = m.groups.tail + hash.match(/(#L\d+)/)?.at(1) || "";
+          }
+        }
+
+        const el = doc.createElement("a");
+        el.href = loc;
+        el.innerText = title;
+        doc.body.appendChild(el);
+        console.log(el);
+
+        const rng = doc.createRange();
+        rng.selectNodeContents(el);
+
+        const sel = win.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(rng);
+        doc.execCommand("copy");
+        el.remove(); 
+
+        return title;
+      }
+      // BOOKMARKLET_END
+      
+    assertEqual(
+      "github pull request or issue title",
+      locationToMarkdown({ host: "github.com", path: "/jessevogt/foobar/pull/123" })
+    )
+
+    assertEqual(
+      "some/file#L42",
+      locationToMarkdown({ host: "github.com", path: "/jessevogt/foobar/blob/some/file", hash: "#L42" })
+    )
+  </script>
+
+  <pre id="foobar"></pre>
+  <script>
+    const bookmarkletScripts = document.evaluate('//script[@class="bookmarklet"]', document);
+    const output = [];
+
+    while (true) {
+      let script = bookmarkletScripts.iterateNext();
+      if (!script) { break; }
+
+      output.push(minify(script.innerText).match(/(\(.+)/)[1]);
+
+    }
+
+    for(let out of output) {
+      const el = document.createElement("pre");
+      el.innerText = `javascript:(()=>{(${out})()})()`;
+      document.body.appendChild(el);
+    }
+  </script> 
+<script class="bookmarklet" id="location_to_ahref">
+
+</script>
+</body>
+</html>
