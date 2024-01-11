@@ -9,7 +9,16 @@
     white-space: -pre-wrap;      /* Opera 4-6 */
     white-space: -o-pre-wrap;    /* Opera 7 */
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
-}
+
+    background: lightgray;
+    font: 14px Monoco, Courier;
+    border: 1px solid gray;
+    border-radius: 10px;
+
+    padding: 10px
+  }
+
+  body { max-width: 1000px }
 </style>
 </head>
 <body>
@@ -65,7 +74,7 @@
     () => { alert("hello world"); return "foobar"; } // BOOKMARKLET_END
   </script>
 
-  <script class="bookmarklet" id="locationToMarkdown">
+  <script class="bookmarklet" id="locationToAhref">
     const locationToMarkdown =
       ({ path = null, hash = null, title = null, host = null } = {}) => {
         var win = window,
@@ -90,7 +99,6 @@
         el.href = loc;
         el.innerText = title;
         doc.body.appendChild(el);
-        console.log(el);
 
         const rng = doc.createRange();
         rng.selectNodeContents(el);
@@ -116,7 +124,6 @@
     )
   </script>
 
-  <pre id="foobar"></pre>
   <script>
     const bookmarkletScripts = document.evaluate('//script[@class="bookmarklet"]', document);
     const output = [];
@@ -125,18 +132,25 @@
       let script = bookmarkletScripts.iterateNext();
       if (!script) { break; }
 
-      output.push(minify(script.innerText).match(/(\(.+)/)[1]);
-
+      output.push(script);
     }
 
     for(let out of output) {
-      const el = document.createElement("pre");
-      el.innerText = `javascript:(()=>{(${out})()})()`;
-      document.body.appendChild(el);
+      const originalContent = out.innerText;
+      const minifiedContent = minify(out.innerText).match(new RegExp("(\\(.+)"))[1];
+
+      const header = document.createElement("h1");
+      header.innerText = out.id;
+      document.body.appendChild(header);
+
+      const original = document.createElement("pre");
+      original.innerText = originalContent;
+      document.body.appendChild(original);
+
+      const minified = document.createElement("pre");
+      minified.innerText = `javascript:(()=>{(${minifiedContent})()})()`;
+      document.body.appendChild(minified);
     }
   </script> 
-<script class="bookmarklet" id="location_to_ahref">
-
-</script>
 </body>
 </html>
